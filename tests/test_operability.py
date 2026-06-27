@@ -8,6 +8,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+LF = chr(10)
 
 from ledge_reference import (
     apply_authority_approval,
@@ -48,7 +49,7 @@ class OperabilityTest(unittest.TestCase):
 
         self.assertEqual(
             completed.stdout,
-            "\n".join(
+            LF.join(
                 [
                     "Drift detected.",
                     "",

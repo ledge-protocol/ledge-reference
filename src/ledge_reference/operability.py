@@ -7,6 +7,10 @@ from textwrap import dedent
 from typing import Any
 
 
+LF = chr(10)
+BLANK_LINE = LF + LF
+
+
 @dataclass(frozen=True)
 class DriftResult:
     claim_id: str
@@ -251,9 +255,9 @@ def render_agent_context_markdown(
     evidence_paths: tuple[str, ...],
     corrected_assumptions: tuple[str, ...],
 ) -> str:
-    evidence_lines = "\n".join(f"- {path}" for path in evidence_paths)
-    assumption_lines = "\n".join(corrected_assumptions)
-    guidance_lines = "\n".join(
+    evidence_lines = LF.join(f"- {path}" for path in evidence_paths)
+    assumption_lines = LF.join(corrected_assumptions)
+    guidance_lines = LF.join(
         (
             "1. Search for remaining Clerk references.",
             "2. Prefer BetterAuth-compatible changes.",
@@ -305,7 +309,7 @@ def render_agent_context_markdown(
             """
         ).strip().format(guidance_lines=guidance_lines),
     )
-    return "\n\n".join(sections) + "\n"
+    return BLANK_LINE.join(sections) + LF
 
 
 def write_agent_context(example_root: Path) -> AgentContextResult:
@@ -386,9 +390,11 @@ def generate_agent_decision_from_context(example_root: Path) -> AgentDecisionRes
     )
     accepted_knowledge = "Authentication migration is not complete."
     reality_check = "Remaining Clerk references are present."
-    decision = (
-        "Do not mark migration complete.\n"
-        "Continue migration by removing or replacing remaining Clerk-specific code."
+    decision = LF.join(
+        (
+            "Do not mark migration complete.",
+            "Continue migration by removing or replacing remaining Clerk-specific code.",
+        )
     )
 
     markdown = render_agent_decision_markdown(
@@ -422,10 +428,10 @@ def render_agent_decision_markdown(
     reality_check: str,
     decision: str,
 ) -> str:
-    stale_assumption_lines = "\n".join(
+    stale_assumption_lines = LF.join(
         f"- {assumption}" for assumption in stale_assumptions
     )
-    evidence_lines = "\n".join(f"- {path}" for path in evidence_consulted)
+    evidence_lines = LF.join(f"- {path}" for path in evidence_consulted)
 
     sections = (
         "# Agent Decision",
@@ -481,7 +487,7 @@ def render_agent_decision_markdown(
             """
         ).strip(),
     )
-    return "\n\n".join(sections) + "\n"
+    return BLANK_LINE.join(sections) + LF
 
 
 def write_agent_decision(example_root: Path) -> AgentDecisionResult:
