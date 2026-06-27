@@ -13,6 +13,8 @@ The following are examples, not protocol requirements:
 - JSON shapes,
 - Markdown conventions,
 - patch layout,
+- transition layout,
+- authority approval layout,
 - Python module structure,
 - test structure.
 
@@ -27,7 +29,9 @@ This repository may validate whether the protocol concepts can be made operation
 - evidence can be gathered,
 - drift can be detected,
 - remediation can be attached,
-- state can be recorded.
+- transitions can be proposed,
+- explicit human authority approval can be required before acceptance,
+- state can be recorded after approval.
 
 ## What This Repository Must Not Claim
 
@@ -37,5 +41,9 @@ This repository must not claim:
 - to define the required Ledge directory structure,
 - to define all valid claim types,
 - to define all valid evidence types,
+- to define the required transition format,
+- to define the required authority model,
 - to be a production service,
 - to be the only valid implementation.
+
+The authority validation in this repository is intentionally minimal. It checks local files only so the reference workflow can demonstrate proposed -> approved -> accepted. LPS documents, not this repository, define protocol boundaries. Real implementations may use signatures, policies, review systems, governance processes, or other authority mechanisms without adopting this file layout or these JSON shapes.

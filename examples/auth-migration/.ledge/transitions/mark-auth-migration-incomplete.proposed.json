@@ -1,0 +1,11 @@
+{
+  "id": "transition.mark-auth-migration-incomplete",
+  "summary": "Mark authentication migration as incomplete.",
+  "status": "proposed",
+  "patchPath": "patches/remove-clerk-imports.patch",
+  "acceptedStatePath": "states/after-transition.json",
+  "proposedState": {
+    "authenticationMigrationComplete": false
+  },
+  "nonNormativeExample": true
+}
