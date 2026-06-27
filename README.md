@@ -10,6 +10,7 @@ Its purpose is to show that Ledge can operate end-to-end in a local, file-based 
 4. Drift is detected when claims and reality disagree.
 5. A patch or next action can be associated with that drift.
 6. A proposed transition can become accepted only after explicit human authority approval.
+7. Accepted state can be transformed into agent-readable context.
 
 This repository is intentionally small. It validates operability, not completeness.
 
@@ -18,6 +19,7 @@ This repository is intentionally small. It validates operability, not completene
 - A reference implementation for experimenting with Ledge workflows.
 - A local file-based example of intent, claims, evidence, patches, transitions, authority, state, and context.
 - A small executable check that demonstrates drift detection against an example project.
+- A generated context artifact showing accepted knowledge as guidance for an agent.
 - A place to test whether the concepts in LPS-0001 can be made operational.
 
 ## What This Repository Is Not
@@ -25,6 +27,8 @@ This repository is intentionally small. It validates operability, not completene
 - It is not the Ledge Protocol specification.
 - It is not a normative file format.
 - It is not a normative JSON shape.
+- It is not a normative Markdown shape.
+- It is not a prompt format.
 - It is not a normative authority system.
 - It is not a cloud service.
 - It is not a product.
@@ -53,6 +57,7 @@ For this reference implementation, that means:
 - patches can describe a possible remediation,
 - transitions can remain proposed until explicit human approval is recorded,
 - accepted state can be updated after approval.
+- accepted knowledge can be rendered into agent-usable context without silently mutating state.
 
 The implementation is deliberately narrow. It only demonstrates that the loop can close. The local directories and JSON documents are reference fixtures, not protocol requirements.
 
@@ -68,6 +73,7 @@ The example in `examples/auth-migration/` models this situation:
 - Transition: propose the accepted-state update.
 - Authority: a human approval record accepts the transition.
 - New accepted state: the migration is no longer marked complete.
+- Agent context: the accepted incomplete state, supporting evidence, corrected assumptions, and guidance are rendered for an agent continuing the migration.
 
 Run the tests with:
 
@@ -94,3 +100,5 @@ This repository avoids product, platform, and serialization commitments on purpo
 The first question is not whether Ledge has a polished interface. The first question is whether intent, claims, evidence, drift, and remediation can be connected in a coherent operational loop. This repository exists to answer that question with the fewest moving parts possible.
 
 The authority check in this repository is intentionally minimal: it loads a local approval record, verifies that it explicitly approves the proposed transition, and then validates the resulting accepted state. Real implementations may use signatures, organizations, quorum rules, policy engines, audit logs, or other authority systems.
+
+The generated agent context is also intentionally minimal and non-normative. This repository uses Markdown only because it is easy to inspect in a small reference implementation. Real implementations may generate XML, JSON, Markdown, database records, prompts, model-specific context, or another representation. Ledge does not define prompt format; it only requires that accepted knowledge can be transformed into agent-usable context without silently mutating accepted state.

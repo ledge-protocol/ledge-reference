@@ -12,8 +12,10 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 from ledge_reference import (  # noqa: E402
     apply_authority_approval,
     load_authority_approval,
+    load_latest_accepted_state,
     load_proposed_transition,
     validate_new_accepted_state,
+    write_agent_context,
 )
 
 
@@ -34,7 +36,7 @@ def scan_reality(root: Path) -> list[str]:
 
 def main() -> None:
     # Load current accepted state.
-    load_json(ROOT / ".ledge" / "states" / "current.json")
+    latest_state = load_latest_accepted_state(ROOT)
 
     # Load claims.
     claim = load_json(ROOT / ".ledge" / "claims" / "auth-uses-betterauth.json")
@@ -81,6 +83,21 @@ def main() -> None:
             "Authentication migration complete: "
             f"{str(accepted_state.authentication_migration_complete).lower()}"
         )
+        print()
+
+        agent_context = write_agent_context(ROOT)
+        print("Latest accepted state loaded.")
+        print(
+            "Authentication migration complete: "
+            f"{str(latest_state['authenticationMigrationComplete']).lower()}"
+        )
+        print("Agent context generated.")
+        print("Agent guidance includes corrected assumptions.")
+        if any(
+            assumption == "Do not assume authentication migration is complete."
+            for assumption in agent_context.corrected_assumptions
+        ):
+            print("Agent guidance warns against assuming migration completion.")
     else:
         print("No drift detected.")
 
