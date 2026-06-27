@@ -3,12 +3,12 @@
   "summary": "Local source scan for authentication provider references.",
   "observations": [
     {
-      "path": "app/auth.ts",
+      "path": "src/auth/provider.ts",
       "contains": ["Clerk", "@clerk/nextjs"]
     },
     {
-      "path": "app/session.ts",
-      "contains": ["BetterAuth"]
+      "path": "src/middleware.ts",
+      "contains": ["Clerk", "clerkMiddleware"]
     }
   ],
   "nonNormativeExample": true

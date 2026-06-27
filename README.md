@@ -66,6 +66,12 @@ Run the tests with:
 python -m unittest discover
 ```
 
+Run the local example script with:
+
+```bash
+python examples/auth-migration/run.py
+```
+
 You can also inspect the example directly under:
 
 ```text

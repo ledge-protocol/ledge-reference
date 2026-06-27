@@ -38,6 +38,12 @@ That mismatch is drift.
 Run:
 
 ```bash
+python examples/auth-migration/run.py
+```
+
+The repository tests can be run with:
+
+```bash
 python -m unittest discover
 ```
 
