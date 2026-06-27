@@ -1,6 +1,5 @@
 # Specification Boundary
 
-
 This repository is not the Ledge Protocol specification.
 
 The protocol specification belongs in LPS-0001 and related LPS documents. This

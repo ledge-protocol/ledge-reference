@@ -1,6 +1,5 @@
 # ledge-reference
 
-
 `ledge-reference` is the first minimal reference implementation for the Ledge Protocol.
 
 Its purpose is to show that Ledge can operate end-to-end in a local, file-based workflow:

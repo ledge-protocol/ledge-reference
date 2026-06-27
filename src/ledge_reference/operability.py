@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from pathlib import Path
+from textwrap import dedent
 from typing import Any
 
 
@@ -244,21 +245,48 @@ def render_agent_context_markdown(
 
     sections = (
         "# Agent Context",
-        f"## Human Intent\n{human_intent}",
-        "## Accepted Knowledge\nAuthentication migration is not complete.",
-        f"## Evidence\nRemaining Clerk references were found in:\n\n{evidence_lines}",
-        f"## Corrected Assumptions\n{assumption_lines}",
-        (
-            "## Current Drift Risk\n"
-            "The codebase may still contain Clerk-specific imports, middleware, "
-            "or auth provider usage."
-        ),
-        (
-            "## Agent Guidance\n"
-            f"Before implementing new authentication changes:\n\n{guidance_lines}"
-        ),
+        dedent(
+            """
+            ## Human Intent
+            {human_intent}
+            """
+        ).strip().format(human_intent=human_intent),
+        dedent(
+            """
+            ## Accepted Knowledge
+            Authentication migration is not complete.
+            """
+        ).strip(),
+        dedent(
+            """
+            ## Evidence
+            Remaining Clerk references were found in:
+
+            {evidence_lines}
+            """
+        ).strip().format(evidence_lines=evidence_lines),
+        dedent(
+            """
+            ## Corrected Assumptions
+            {assumption_lines}
+            """
+        ).strip().format(assumption_lines=assumption_lines),
+        dedent(
+            """
+            ## Current Drift Risk
+            The codebase may still contain Clerk-specific imports, middleware, or auth provider usage.
+            """
+        ).strip(),
+        dedent(
+            """
+            ## Agent Guidance
+            Before implementing new authentication changes:
+
+            {guidance_lines}
+            """
+        ).strip().format(guidance_lines=guidance_lines),
     )
-    return "\n\n".join(sections) + "\n\n"
+    return "\n\n".join(sections) + "\n"
 
 
 def write_agent_context(example_root: Path) -> AgentContextResult:
