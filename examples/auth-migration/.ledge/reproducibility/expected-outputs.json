@@ -1,0 +1,16 @@
+{
+  "id": "reproducibility.auth-migration.expected-outputs",
+  "summary": "Expected stable hashes for the local auth migration reproducibility check.",
+  "hashAlgorithm": "sha256",
+  "normalization": {
+    "text": "UTF-8 with line endings normalized to LF",
+    "json": "UTF-8 JSON with sorted keys, compact separators, and LF line ending"
+  },
+  "outputs": {
+    "acceptedState": "4272702c6ca0912c49e1cc62c59de7d6bf7c929c1ae68450887014e81ef8f9fa",
+    "agentContext": "e0e72c9a2a70e95b39ca4cb9d7f4030b6177a72fffd32ddbd83ac7d978fa9c86",
+    "agentDecision": "c871673ffc678f268de479491626a9032bfedf1c26ab2eafe4e50ecb3c453766",
+    "driftResult": "4756207ed5beede18d4ab46caa5d8852b1d0aac34167c75a02e2af8f0de4a72f"
+  },
+  "nonNormativeExample": true
+}

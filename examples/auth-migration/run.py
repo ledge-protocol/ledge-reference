@@ -15,6 +15,7 @@ from ledge_reference import (  # noqa: E402
     load_agent_task,
     load_latest_accepted_state,
     load_proposed_transition,
+    run_auth_migration_reproducibility_check,
     validate_new_accepted_state,
     write_agent_decision,
     write_agent_context,
@@ -115,6 +116,14 @@ def main() -> None:
             print(f"- {evidence_path}")
         print("Agent decision generated.")
         print("Agent refused to mark migration complete without evidence.")
+        print()
+        print("Reproducibility check started.")
+        reproducibility_hashes = run_auth_migration_reproducibility_check(ROOT)
+        print(f"Agent context hash: {reproducibility_hashes['agentContext']}")
+        print(f"Agent decision hash: {reproducibility_hashes['agentDecision']}")
+        print(f"Accepted state hash: {reproducibility_hashes['acceptedState']}")
+        print(f"Drift result hash: {reproducibility_hashes['driftResult']}")
+        print("Reproducibility check passed.")
     else:
         print("No drift detected.")
 

@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -12,12 +13,18 @@ LF = chr(10)
 
 from ledge_reference import (
     apply_authority_approval,
+    collect_auth_migration_reproducibility_outputs,
     generate_agent_decision_from_context,
     generate_agent_context,
     inspect_auth_migration,
     load_agent_task,
     load_authority_approval,
+    load_expected_reproducibility_outputs,
     load_proposed_transition,
+    normalize_line_endings,
+    run_auth_migration_reproducibility_check,
+    stable_json_hash,
+    stable_text_hash,
     validate_agent_context,
     validate_agent_decision,
     validate_accepted_transition,
@@ -39,6 +46,9 @@ class OperabilityTest(unittest.TestCase):
         )
 
     def test_auth_migration_script_output(self) -> None:
+        expected_hashes = load_expected_reproducibility_outputs(
+            ROOT / "examples" / "auth-migration"
+        )
         completed = subprocess.run(
             [sys.executable, "examples/auth-migration/run.py"],
             cwd=ROOT,
@@ -90,6 +100,13 @@ class OperabilityTest(unittest.TestCase):
                     "- src/middleware.ts",
                     "Agent decision generated.",
                     "Agent refused to mark migration complete without evidence.",
+                    "",
+                    "Reproducibility check started.",
+                    f"Agent context hash: {expected_hashes['agentContext']}",
+                    f"Agent decision hash: {expected_hashes['agentDecision']}",
+                    f"Accepted state hash: {expected_hashes['acceptedState']}",
+                    f"Drift result hash: {expected_hashes['driftResult']}",
+                    "Reproducibility check passed.",
                     "",
                 ]
             ),
@@ -334,6 +351,101 @@ class OperabilityTest(unittest.TestCase):
 
             with self.assertRaisesRegex(FileNotFoundError, "source-scan.json"):
                 generate_agent_decision_from_context(example_copy)
+
+    def test_agent_context_hash_is_reproducible(self) -> None:
+        example_root = ROOT / "examples" / "auth-migration"
+
+        first = stable_text_hash(generate_agent_context(example_root).markdown)
+        second = stable_text_hash(generate_agent_context(example_root).markdown)
+
+        self.assertEqual(first, second)
+
+    def test_agent_decision_hash_is_reproducible(self) -> None:
+        example_root = ROOT / "examples" / "auth-migration"
+        write_agent_context(example_root)
+
+        first = stable_text_hash(
+            generate_agent_decision_from_context(example_root).markdown
+        )
+        second = stable_text_hash(
+            generate_agent_decision_from_context(example_root).markdown
+        )
+
+        self.assertEqual(first, second)
+
+    def test_accepted_state_hash_is_reproducible(self) -> None:
+        state_path = (
+            ROOT
+            / "examples"
+            / "auth-migration"
+            / ".ledge"
+            / "states"
+            / "after-transition.json"
+        )
+        first = stable_json_hash(json.loads(state_path.read_text(encoding="utf-8")))
+        second = stable_json_hash(json.loads(state_path.read_text(encoding="utf-8")))
+
+        self.assertEqual(first, second)
+
+    def test_drift_result_hash_is_reproducible(self) -> None:
+        example_root = ROOT / "examples" / "auth-migration"
+
+        first = stable_json_hash(inspect_auth_migration(example_root))
+        second = stable_json_hash(inspect_auth_migration(example_root))
+
+        self.assertEqual(first, second)
+
+    def test_json_hashing_is_key_order_independent(self) -> None:
+        first = {"a": 1, "b": {"c": 2, "d": 3}}
+        second = {"b": {"d": 3, "c": 2}, "a": 1}
+
+        self.assertEqual(stable_json_hash(first), stable_json_hash(second))
+
+    def test_line_ending_normalization_works(self) -> None:
+        self.assertEqual(
+            normalize_line_endings("one\r\ntwo\rthree\n"),
+            "one\ntwo\nthree\n",
+        )
+        self.assertEqual(
+            stable_text_hash("one\r\ntwo\rthree\n"),
+            stable_text_hash("one\ntwo\nthree\n"),
+        )
+
+    def test_changing_evidence_changes_reproducibility_hash(self) -> None:
+        example_root = ROOT / "examples" / "auth-migration"
+        baseline = collect_auth_migration_reproducibility_outputs(example_root)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            example_copy = Path(temp_dir) / "auth-migration"
+            shutil.copytree(example_root, example_copy)
+            evidence_path = example_copy / ".ledge" / "evidence" / "source-scan.json"
+            evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+            evidence["observations"] = evidence["observations"][:1]
+            evidence_path.write_text(
+                json.dumps(evidence, indent=2, sort_keys=True) + LF,
+                encoding="utf-8",
+            )
+
+            changed = collect_auth_migration_reproducibility_outputs(example_copy)
+
+        self.assertNotEqual(baseline["agentContext"], changed["agentContext"])
+        self.assertNotEqual(baseline["agentDecision"], changed["agentDecision"])
+
+    def test_repeated_runs_produce_identical_reproducibility_outputs(self) -> None:
+        example_root = ROOT / "examples" / "auth-migration"
+
+        first = collect_auth_migration_reproducibility_outputs(example_root)
+        second = collect_auth_migration_reproducibility_outputs(example_root)
+
+        self.assertEqual(first, second)
+
+    def test_reproducibility_check_matches_manifest(self) -> None:
+        example_root = ROOT / "examples" / "auth-migration"
+
+        result = run_auth_migration_reproducibility_check(example_root)
+        expected = load_expected_reproducibility_outputs(example_root)
+
+        self.assertEqual(result, expected)
 
 
 if __name__ == "__main__":

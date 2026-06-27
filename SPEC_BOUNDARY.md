@@ -20,6 +20,9 @@ The following are examples, not protocol requirements:
 - generated context layout,
 - generated decision layout,
 - agent task layout,
+- reproducibility manifest layout,
+- hash algorithm,
+- canonicalization method,
 - prompt layout,
 - agent behavior,
 - Python module structure,
@@ -46,6 +49,7 @@ This repository may validate whether the protocol concepts can be made operation
   silently mutating state,
 - accepted context can be consumed by a deterministic simulated agent workflow
   to produce an evidence-backed decision.
+- identical inputs and evidence can reproduce the same local knowledge outputs.
 
 ## What This Repository Must Not Claim
 
@@ -59,6 +63,9 @@ This repository must not claim:
 - to define the required authority model,
 - to define a required context format,
 - to define a required agent decision format,
+- to define a required reproducibility manifest,
+- to define required SHA-256 usage,
+- to define required JSON canonicalization,
 - to define required agent behavior,
 - to define a required prompt format,
 - to be a real LLM evaluation,
@@ -87,3 +94,10 @@ context to Codex, Claude, Cursor, Gemini, MCP, IDEs, local agents, or other
 tools, but Ledge does not define how those agents decide or act. This
 repository only demonstrates that accepted knowledge can be consumed to
 constrain or guide work in a local operability proof.
+
+The reproducibility check in this repository is a local verification fixture.
+It uses SHA-256 over normalized text and deterministically serialized JSON, and
+it stores expected hashes in a checked-in manifest. That manifest format,
+hashing choice, file layout, and canonicalization method are not normative.
+Ledge requires reproducibility as a protocol property; real implementations may
+prove or verify that property with different mechanisms.

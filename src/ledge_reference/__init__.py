@@ -25,6 +25,16 @@ from .operability import (
     write_agent_decision,
     write_agent_context,
 )
+from .reproducibility import (
+    REPRODUCIBILITY_KEYS,
+    collect_auth_migration_reproducibility_outputs,
+    load_expected_reproducibility_outputs,
+    normalize_line_endings,
+    run_auth_migration_reproducibility_check,
+    stable_json_hash,
+    stable_json_text,
+    stable_text_hash,
+)
 
 __all__ = [
     "AgentContextResult",
@@ -50,4 +60,12 @@ __all__ = [
     "validate_proposed_transition",
     "write_agent_decision",
     "write_agent_context",
+    "REPRODUCIBILITY_KEYS",
+    "collect_auth_migration_reproducibility_outputs",
+    "load_expected_reproducibility_outputs",
+    "normalize_line_endings",
+    "run_auth_migration_reproducibility_check",
+    "stable_json_hash",
+    "stable_json_text",
+    "stable_text_hash",
 ]

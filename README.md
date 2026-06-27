@@ -13,6 +13,8 @@ Its purpose is to show that Ledge can operate end-to-end in a local, file-based 
 7. Accepted state can be transformed into agent-readable context.
 8. Agent-readable context can be consumed by a deterministic simulated agent
    workflow to produce an evidence-backed decision.
+9. Identical local evidence and inputs can be checked for reproducible
+   knowledge outputs.
 
 This repository is intentionally small. It validates operability, not completeness.
 
@@ -25,6 +27,8 @@ This repository is intentionally small. It validates operability, not completene
 - A generated context artifact showing accepted knowledge as guidance for an agent.
 - A deterministic agent consumption simulation that reads that context before
   producing an evidence-backed decision.
+- A reproducibility check showing that identical auth migration inputs produce
+  stable drift, accepted state, context, and decision hashes.
 - A place to test whether the concepts in LPS-0001 can be made operational.
 
 ## What This Repository Is Not
@@ -36,6 +40,8 @@ This repository is intentionally small. It validates operability, not completene
 - It is not a prompt format.
 - It is not an agent behavior specification.
 - It is not a real LLM evaluation or benchmark.
+- It is not a normative reproducibility manifest.
+- It is not a normative hash or canonicalization scheme.
 - It is not a normative authority system.
 - It is not a cloud service.
 - It is not a product.
@@ -93,6 +99,8 @@ The example in `examples/auth-migration/` models this situation:
 - Agent decision: a deterministic simulated agent reads the generated context
   and task, consults source-scan evidence, avoids stale completion assumptions,
   and refuses to mark the migration complete.
+- Reproducibility: the same local loop is run twice and compared against a
+  checked-in non-normative hash manifest.
 
 Run the tests with:
 
@@ -142,3 +150,10 @@ decision format is only a readable fixture for this repository. Real
 implementations may provide accepted context to Codex, Claude, Cursor, Gemini,
 MCP, IDEs, local tools, or other agents, but Ledge does not define how those
 agents behave. This proof is about local operability, not benchmark validity.
+
+The reproducibility check is also non-normative. This repository uses SHA-256
+over normalized text and deterministically serialized JSON because that is
+small and easy to verify locally. Ledge requires reproducibility as a protocol
+property, not this manifest format, hash algorithm, file layout, or
+canonicalization method. Real implementations may verify reproducibility by
+other means.
