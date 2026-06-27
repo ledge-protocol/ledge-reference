@@ -99,5 +99,6 @@ The reproducibility check in this repository is a local verification fixture.
 It uses SHA-256 over normalized text and deterministically serialized JSON, and
 it stores expected hashes in a checked-in manifest. That manifest format,
 hashing choice, file layout, and canonicalization method are not normative.
+
 Ledge requires reproducibility as a protocol property; real implementations may
 prove or verify that property with different mechanisms.

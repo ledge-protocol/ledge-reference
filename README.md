@@ -114,6 +114,9 @@ Run the local example script with:
 python examples/auth-migration/run.py
 ```
 
+The example output includes a reproducibility section with stable hashes for
+the generated context, generated decision, accepted state, and drift result.
+
 You can also inspect the example directly under:
 
 ```text

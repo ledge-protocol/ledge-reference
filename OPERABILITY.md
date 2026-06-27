@@ -87,6 +87,9 @@ The repository tests can be run with:
 python -m unittest discover
 ```
 
+Both commands are intended to be readable in a normal terminal and in GitHub
+review views. Generated artifacts use LF line endings.
+
 The example runner prints the drift, patch proposal, proposed transition, human
 approval, accepted transition, new accepted state, and generated agent context
 status. It also prints the deterministic agent consumption step: context

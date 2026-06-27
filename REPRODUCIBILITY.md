@@ -4,6 +4,9 @@ This reference implementation treats reproducibility as a local invariant:
 given the same auth migration inputs and evidence, the same minimal Ledge loop
 must produce the same knowledge outputs.
 
+The check is intentionally plain text and local. It is designed to be easy to
+read in a pull request as well as easy to run from a checkout.
+
 For `examples/auth-migration/`, the reproducibility check runs the local loop
 twice and compares stable SHA-256 hashes for:
 

@@ -8,7 +8,9 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
+SOURCE_ROOT = ROOT / "src"
+sys.path.insert(0, str(SOURCE_ROOT))
+AUTH_MIGRATION_ROOT = ROOT / "examples" / "auth-migration"
 LF = chr(10)
 
 from ledge_reference import (
@@ -36,7 +38,7 @@ from ledge_reference import (
 
 class OperabilityTest(unittest.TestCase):
     def test_auth_migration_drift_is_detected(self) -> None:
-        result = inspect_auth_migration(ROOT / "examples" / "auth-migration")
+        result = inspect_auth_migration(AUTH_MIGRATION_ROOT)
 
         self.assertTrue(result.drift)
         self.assertEqual(result.claim_id, "claim.auth.uses-betterauth")
@@ -47,7 +49,7 @@ class OperabilityTest(unittest.TestCase):
 
     def test_auth_migration_script_output(self) -> None:
         expected_hashes = load_expected_reproducibility_outputs(
-            ROOT / "examples" / "auth-migration"
+            AUTH_MIGRATION_ROOT
         )
         completed = subprocess.run(
             [sys.executable, "examples/auth-migration/run.py"],
@@ -113,24 +115,24 @@ class OperabilityTest(unittest.TestCase):
         )
 
     def test_agent_context_can_be_generated_from_accepted_state(self) -> None:
-        result = generate_agent_context(ROOT / "examples" / "auth-migration")
+        result = generate_agent_context(AUTH_MIGRATION_ROOT)
 
         self.assertEqual(result.state_id, "state.current.accepted")
         self.assertFalse(result.authentication_migration_complete)
         self.assertIn("# Agent Context", result.markdown)
 
     def test_agent_context_includes_human_intent(self) -> None:
-        result = generate_agent_context(ROOT / "examples" / "auth-migration")
+        result = generate_agent_context(AUTH_MIGRATION_ROOT)
 
         self.assertIn("Replace Clerk with BetterAuth.", result.markdown)
 
     def test_agent_context_includes_accepted_knowledge(self) -> None:
-        result = generate_agent_context(ROOT / "examples" / "auth-migration")
+        result = generate_agent_context(AUTH_MIGRATION_ROOT)
 
         self.assertIn("Authentication migration is not complete.", result.markdown)
 
     def test_agent_context_includes_evidence_paths(self) -> None:
-        result = generate_agent_context(ROOT / "examples" / "auth-migration")
+        result = generate_agent_context(AUTH_MIGRATION_ROOT)
 
         self.assertEqual(
             result.evidence_paths,
@@ -140,7 +142,7 @@ class OperabilityTest(unittest.TestCase):
         self.assertIn("- src/middleware.ts", result.markdown)
 
     def test_agent_context_includes_corrected_assumptions(self) -> None:
-        result = generate_agent_context(ROOT / "examples" / "auth-migration")
+        result = generate_agent_context(AUTH_MIGRATION_ROOT)
 
         self.assertIn(
             "Do not assume authentication migration is complete.",
@@ -152,7 +154,7 @@ class OperabilityTest(unittest.TestCase):
         )
 
     def test_agent_context_warns_migration_is_incomplete(self) -> None:
-        result = generate_agent_context(ROOT / "examples" / "auth-migration")
+        result = generate_agent_context(AUTH_MIGRATION_ROOT)
 
         self.assertIn("Authentication migration is not complete.", result.markdown)
         self.assertIn(
@@ -162,7 +164,7 @@ class OperabilityTest(unittest.TestCase):
         self.assertNotIn("Authentication migration is complete.", result.markdown)
 
     def test_agent_context_artifact_matches_generated_context(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
         write_agent_context(example_root)
 
         result = validate_agent_context(example_root)
@@ -171,7 +173,7 @@ class OperabilityTest(unittest.TestCase):
 
     def test_proposed_transition_is_not_accepted_without_approval(self) -> None:
         transition = load_proposed_transition(
-            ROOT / "examples" / "auth-migration",
+            AUTH_MIGRATION_ROOT,
             "mark-auth-migration-incomplete.proposed.json",
         )
 
@@ -179,7 +181,7 @@ class OperabilityTest(unittest.TestCase):
             validate_accepted_transition(transition)
 
     def test_transition_with_approval_can_become_accepted(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
         transition = load_proposed_transition(
             example_root, "mark-auth-migration-incomplete.proposed.json"
         )
@@ -196,7 +198,7 @@ class OperabilityTest(unittest.TestCase):
         )
 
     def test_new_state_marks_authentication_migration_incomplete(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
         transition = load_proposed_transition(
             example_root, "mark-auth-migration-incomplete.proposed.json"
         )
@@ -210,7 +212,7 @@ class OperabilityTest(unittest.TestCase):
         self.assertFalse(result.authentication_migration_complete)
 
     def test_missing_approval_fails_validation(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
         transition = load_proposed_transition(
             example_root, "mark-auth-migration-incomplete.proposed.json"
         )
@@ -224,7 +226,7 @@ class OperabilityTest(unittest.TestCase):
             apply_authority_approval(example_root, transition, approval)
 
     def test_transition_must_reference_existing_patch(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
         transition = load_proposed_transition(
             example_root, "mark-auth-migration-incomplete.proposed.json"
         )
@@ -236,7 +238,7 @@ class OperabilityTest(unittest.TestCase):
 
     def test_agent_task_can_be_loaded(self) -> None:
         task = load_agent_task(
-            ROOT / "examples" / "auth-migration",
+            AUTH_MIGRATION_ROOT,
             "continue-auth-migration.md",
         )
 
@@ -245,7 +247,7 @@ class OperabilityTest(unittest.TestCase):
 
     def test_agent_decision_can_be_generated_from_context(self) -> None:
         result = generate_agent_decision_from_context(
-            ROOT / "examples" / "auth-migration"
+            AUTH_MIGRATION_ROOT
         )
 
         self.assertIn("# Agent Decision", result.markdown)
@@ -253,7 +255,7 @@ class OperabilityTest(unittest.TestCase):
 
     def test_agent_decision_references_generated_context(self) -> None:
         result = generate_agent_decision_from_context(
-            ROOT / "examples" / "auth-migration"
+            AUTH_MIGRATION_ROOT
         )
 
         self.assertEqual(
@@ -264,7 +266,7 @@ class OperabilityTest(unittest.TestCase):
 
     def test_agent_decision_includes_accepted_knowledge(self) -> None:
         result = generate_agent_decision_from_context(
-            ROOT / "examples" / "auth-migration"
+            AUTH_MIGRATION_ROOT
         )
 
         self.assertEqual(
@@ -275,7 +277,7 @@ class OperabilityTest(unittest.TestCase):
 
     def test_agent_decision_avoids_stale_assumptions(self) -> None:
         result = generate_agent_decision_from_context(
-            ROOT / "examples" / "auth-migration"
+            AUTH_MIGRATION_ROOT
         )
 
         self.assertIn(
@@ -290,7 +292,7 @@ class OperabilityTest(unittest.TestCase):
 
     def test_agent_decision_references_evidence(self) -> None:
         result = generate_agent_decision_from_context(
-            ROOT / "examples" / "auth-migration"
+            AUTH_MIGRATION_ROOT
         )
 
         self.assertEqual(
@@ -306,38 +308,34 @@ class OperabilityTest(unittest.TestCase):
 
     def test_agent_decision_says_migration_is_incomplete(self) -> None:
         result = generate_agent_decision_from_context(
-            ROOT / "examples" / "auth-migration"
+            AUTH_MIGRATION_ROOT
         )
 
         self.assertIn("Authentication migration is not complete.", result.markdown)
         self.assertIn("Remaining Clerk references are present.", result.markdown)
 
     def test_agent_decision_does_not_mark_migration_complete(self) -> None:
-        result = generate_agent_decision_from_context(
-            ROOT / "examples" / "auth-migration"
-        )
+        result = generate_agent_decision_from_context(AUTH_MIGRATION_ROOT)
 
         self.assertIn("Do not mark migration complete.", result.markdown)
         self.assertNotIn("Authentication migration is complete.", result.markdown)
 
     def test_agent_decision_does_not_claim_clerk_references_are_removed(self) -> None:
-        result = generate_agent_decision_from_context(
-            ROOT / "examples" / "auth-migration"
-        )
+        result = generate_agent_decision_from_context(AUTH_MIGRATION_ROOT)
 
         self.assertNotIn("Clerk references are removed.", result.markdown)
         self.assertNotIn("Clerk references have been removed.", result.markdown)
         self.assertNotIn("no remaining Clerk references", result.reality_check)
 
     def test_agent_decision_artifact_matches_generated_decision(self) -> None:
-        result = validate_agent_decision(ROOT / "examples" / "auth-migration")
+        result = validate_agent_decision(AUTH_MIGRATION_ROOT)
 
         self.assertIn("## Decision", result.markdown)
 
     def test_missing_context_fails_agent_decision_validation(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             example_copy = Path(temp_dir) / "auth-migration"
-            shutil.copytree(ROOT / "examples" / "auth-migration", example_copy)
+            shutil.copytree(AUTH_MIGRATION_ROOT, example_copy)
             (example_copy / ".ledge" / "context" / "agent-context.md").unlink()
 
             with self.assertRaisesRegex(ValueError, "context artifact is missing"):
@@ -346,14 +344,14 @@ class OperabilityTest(unittest.TestCase):
     def test_missing_evidence_fails_agent_decision_validation(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             example_copy = Path(temp_dir) / "auth-migration"
-            shutil.copytree(ROOT / "examples" / "auth-migration", example_copy)
+            shutil.copytree(AUTH_MIGRATION_ROOT, example_copy)
             (example_copy / ".ledge" / "evidence" / "source-scan.json").unlink()
 
             with self.assertRaisesRegex(FileNotFoundError, "source-scan.json"):
                 generate_agent_decision_from_context(example_copy)
 
     def test_agent_context_hash_is_reproducible(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
 
         first = stable_text_hash(generate_agent_context(example_root).markdown)
         second = stable_text_hash(generate_agent_context(example_root).markdown)
@@ -361,7 +359,7 @@ class OperabilityTest(unittest.TestCase):
         self.assertEqual(first, second)
 
     def test_agent_decision_hash_is_reproducible(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
         write_agent_context(example_root)
 
         first = stable_text_hash(
@@ -388,7 +386,7 @@ class OperabilityTest(unittest.TestCase):
         self.assertEqual(first, second)
 
     def test_drift_result_hash_is_reproducible(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
 
         first = stable_json_hash(inspect_auth_migration(example_root))
         second = stable_json_hash(inspect_auth_migration(example_root))
@@ -412,7 +410,7 @@ class OperabilityTest(unittest.TestCase):
         )
 
     def test_changing_evidence_changes_reproducibility_hash(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
         baseline = collect_auth_migration_reproducibility_outputs(example_root)
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -432,7 +430,7 @@ class OperabilityTest(unittest.TestCase):
         self.assertNotEqual(baseline["agentDecision"], changed["agentDecision"])
 
     def test_repeated_runs_produce_identical_reproducibility_outputs(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
 
         first = collect_auth_migration_reproducibility_outputs(example_root)
         second = collect_auth_migration_reproducibility_outputs(example_root)
@@ -440,7 +438,7 @@ class OperabilityTest(unittest.TestCase):
         self.assertEqual(first, second)
 
     def test_reproducibility_check_matches_manifest(self) -> None:
-        example_root = ROOT / "examples" / "auth-migration"
+        example_root = AUTH_MIGRATION_ROOT
 
         result = run_auth_migration_reproducibility_check(example_root)
         expected = load_expected_reproducibility_outputs(example_root)

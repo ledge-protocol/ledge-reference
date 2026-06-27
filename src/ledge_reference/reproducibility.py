@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import asdict, is_dataclass
+from dataclasses import (
+    asdict,
+    is_dataclass,
+)
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -103,6 +106,7 @@ def load_expected_reproducibility_outputs(example_root: Path) -> dict[str, str]:
     manifest_path = (
         example_root / ".ledge" / "reproducibility" / "expected-outputs.json"
     )
+
     manifest = load_json(manifest_path)
     outputs = manifest.get("outputs")
     if not isinstance(outputs, dict):
@@ -123,7 +127,10 @@ def _to_jsonable(value: Any) -> Any:
         return _to_jsonable(asdict(value))
 
     if isinstance(value, dict):
-        return {str(key): _to_jsonable(item) for key, item in value.items()}
+        return {
+            str(key): _to_jsonable(item)
+            for key, item in value.items()
+        }
 
     if isinstance(value, (list, tuple)):
         return [_to_jsonable(item) for item in value]
