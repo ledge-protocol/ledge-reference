@@ -2,9 +2,19 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import sys
 
 
 ROOT = Path(__file__).resolve().parent
+REPO_ROOT = ROOT.parents[1]
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from ledge_reference import (  # noqa: E402
+    apply_authority_approval,
+    load_authority_approval,
+    load_proposed_transition,
+    validate_new_accepted_state,
+)
 
 
 def load_json(path: Path) -> dict:
@@ -50,6 +60,27 @@ def main() -> None:
         print("Proposed Patch:")
         print("Mark authentication migration as incomplete.")
         print("Add evidence references to remaining Clerk usage.")
+        print()
+
+        transition = load_proposed_transition(
+            ROOT, "mark-auth-migration-incomplete.proposed.json"
+        )
+        print("Patch proposal found.")
+        print(f"Transition status: {transition['status']}")
+        print()
+
+        approval = load_authority_approval(ROOT, "founder-approval.json")
+        print("Human approval found.")
+
+        accepted_transition = apply_authority_approval(ROOT, transition, approval)
+        print(f"Transition status: {accepted_transition['status']}")
+
+        accepted_state = validate_new_accepted_state(ROOT, accepted_transition)
+        print("New accepted state created.")
+        print(
+            "Authentication migration complete: "
+            f"{str(accepted_state.authentication_migration_complete).lower()}"
+        )
     else:
         print("No drift detected.")
 

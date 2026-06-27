@@ -1,0 +1,9 @@
+{
+  "id": "state.after-transition.accepted",
+  "status": "accepted",
+  "replaces": "state.current.accepted",
+  "acceptedTransition": "transition.mark-auth-migration-incomplete",
+  "authenticationMigrationComplete": false,
+  "summary": "Authentication migration remains incomplete because Clerk references are still present.",
+  "nonNormativeExample": true
+}
