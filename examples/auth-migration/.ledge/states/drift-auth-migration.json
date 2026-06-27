@@ -1,0 +1,8 @@
+{
+  "id": "state.drift.auth-migration",
+  "claim": "claim.auth.uses-betterauth",
+  "evidence": "evidence.auth.source-scan",
+  "state": "drift",
+  "reason": "The claim says the Clerk to BetterAuth migration is complete, but local source evidence still contains Clerk references.",
+  "nonNormativeExample": true
+}

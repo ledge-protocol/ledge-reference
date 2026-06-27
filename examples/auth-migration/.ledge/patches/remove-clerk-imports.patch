@@ -1,0 +1,10 @@
+diff --git a/app/auth.ts b/app/auth.ts
+--- a/app/auth.ts
++++ b/app/auth.ts
+@@
+-import { auth } from "@clerk/nextjs";
++import { auth } from "better-auth";
+ 
+ export function requireUser() {
+   return auth();
+ }

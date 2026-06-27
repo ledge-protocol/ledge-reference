@@ -1,0 +1,11 @@
+{
+  "id": "claim.auth.uses-betterauth",
+  "summary": "Authentication uses BetterAuth.",
+  "status": "asserted",
+  "migration": {
+    "from": "Clerk",
+    "to": "BetterAuth",
+    "claimedComplete": true
+  },
+  "nonNormativeExample": true
+}

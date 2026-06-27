@@ -1,0 +1,15 @@
+{
+  "id": "evidence.auth.source-scan",
+  "summary": "Local source scan for authentication provider references.",
+  "observations": [
+    {
+      "path": "app/auth.ts",
+      "contains": ["Clerk", "@clerk/nextjs"]
+    },
+    {
+      "path": "app/session.ts",
+      "contains": ["BetterAuth"]
+    }
+  ],
+  "nonNormativeExample": true
+}
