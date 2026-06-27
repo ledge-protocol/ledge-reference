@@ -1,6 +1,10 @@
 {
   "id": "state.current.accepted",
+  "status": "accepted",
+  "replaces": "state.previous.accepted",
   "acceptedClaim": "claim.auth.uses-betterauth",
-  "acceptedState": "authentication-migration-complete",
+  "acceptedTransition": "transition.mark-auth-migration-incomplete",
+  "authenticationMigrationComplete": false,
+  "summary": "Authentication migration remains incomplete because Clerk references are still present.",
   "nonNormativeExample": true
 }

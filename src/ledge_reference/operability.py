@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from pathlib import Path
+from textwrap import dedent
 from typing import Any
 
 
@@ -21,6 +22,15 @@ class TransitionResult:
     approval_id: str
     accepted_state_path: str
     authentication_migration_complete: bool
+
+
+@dataclass(frozen=True)
+class AgentContextResult:
+    state_id: str
+    authentication_migration_complete: bool
+    evidence_paths: tuple[str, ...]
+    corrected_assumptions: tuple[str, ...]
+    markdown: str
 
 
 def inspect_auth_migration(example_root: Path) -> DriftResult:
@@ -54,6 +64,33 @@ def inspect_auth_migration(example_root: Path) -> DriftResult:
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_latest_accepted_state(example_root: Path) -> dict[str, Any]:
+    state_path = example_root / ".ledge" / "states" / "current.json"
+    state = load_json(state_path)
+
+    if state.get("status") != "accepted":
+        raise ValueError("Latest state must be accepted.")
+
+    if state.get("authenticationMigrationComplete") is not False:
+        raise ValueError(
+            "Latest accepted state must mark authentication migration complete as false."
+        )
+
+    return state
+
+
+def load_relevant_intent(example_root: Path) -> str:
+    intent_path = (
+        example_root / ".ledge" / "intent" / "replace-clerk-with-betterauth.md"
+    )
+    intent_text = intent_path.read_text(encoding="utf-8")
+
+    if "Replace Clerk with BetterAuth" not in intent_text:
+        raise ValueError("Expected auth migration intent was not found.")
+
+    return "Replace Clerk with BetterAuth."
 
 
 def load_proposed_transition(example_root: Path, transition_name: str) -> dict[str, Any]:
@@ -134,3 +171,137 @@ def validate_new_accepted_state(
         accepted_state_path=state_path,
         authentication_migration_complete=complete,
     )
+
+
+def load_auth_migration_evidence(example_root: Path) -> dict[str, Any]:
+    evidence_path = example_root / ".ledge" / "evidence" / "source-scan.json"
+    evidence = load_json(evidence_path)
+
+    observations = evidence.get("observations")
+    if not isinstance(observations, list) or not observations:
+        raise ValueError("Evidence must include source observations.")
+
+    return evidence
+
+
+def generate_agent_context(example_root: Path) -> AgentContextResult:
+    state = load_latest_accepted_state(example_root)
+    human_intent = load_relevant_intent(example_root)
+    evidence = load_auth_migration_evidence(example_root)
+
+    transition = load_proposed_transition(
+        example_root, "mark-auth-migration-incomplete.proposed.json"
+    )
+    approval = load_authority_approval(example_root, "founder-approval.json")
+    accepted_transition = apply_authority_approval(example_root, transition, approval)
+    validate_accepted_transition(accepted_transition)
+
+    if state.get("acceptedTransition") != accepted_transition.get("id"):
+        raise ValueError("Latest accepted state must reference the accepted transition.")
+
+    evidence_paths = tuple(
+        observation["path"]
+        for observation in evidence["observations"]
+        if isinstance(observation, dict) and isinstance(observation.get("path"), str)
+    )
+    if not evidence_paths:
+        raise ValueError("Evidence must include source paths.")
+
+    corrected_assumptions = (
+        "Do not assume authentication migration is complete.",
+        "Do not assume all Clerk references have been removed.",
+    )
+
+    markdown = render_agent_context_markdown(
+        human_intent=human_intent,
+        evidence_paths=evidence_paths,
+        corrected_assumptions=corrected_assumptions,
+    )
+
+    return AgentContextResult(
+        state_id=state["id"],
+        authentication_migration_complete=state["authenticationMigrationComplete"],
+        evidence_paths=evidence_paths,
+        corrected_assumptions=corrected_assumptions,
+        markdown=markdown,
+    )
+
+
+def render_agent_context_markdown(
+    human_intent: str,
+    evidence_paths: tuple[str, ...],
+    corrected_assumptions: tuple[str, ...],
+) -> str:
+    evidence_lines = "\n".join(f"- {path}" for path in evidence_paths)
+    assumption_lines = "\n".join(corrected_assumptions)
+    guidance_lines = "\n".join(
+        (
+            "1. Search for remaining Clerk references.",
+            "2. Prefer BetterAuth-compatible changes.",
+            "3. Do not mark the migration complete without evidence.",
+            "4. Produce evidence for any claim about migration completion.",
+        )
+    )
+
+    sections = (
+        "# Agent Context",
+        dedent(
+            """
+            ## Human Intent
+            {human_intent}
+            """
+        ).strip().format(human_intent=human_intent),
+        dedent(
+            """
+            ## Accepted Knowledge
+            Authentication migration is not complete.
+            """
+        ).strip(),
+        dedent(
+            """
+            ## Evidence
+            Remaining Clerk references were found in:
+
+            {evidence_lines}
+            """
+        ).strip().format(evidence_lines=evidence_lines),
+        dedent(
+            """
+            ## Corrected Assumptions
+            {assumption_lines}
+            """
+        ).strip().format(assumption_lines=assumption_lines),
+        dedent(
+            """
+            ## Current Drift Risk
+            The codebase may still contain Clerk-specific imports, middleware, or auth provider usage.
+            """
+        ).strip(),
+        dedent(
+            """
+            ## Agent Guidance
+            Before implementing new authentication changes:
+
+            {guidance_lines}
+            """
+        ).strip().format(guidance_lines=guidance_lines),
+    )
+    return "\n\n".join(sections) + "\n"
+
+
+def write_agent_context(example_root: Path) -> AgentContextResult:
+    result = generate_agent_context(example_root)
+    context_path = example_root / ".ledge" / "context" / "agent-context.md"
+    context_path.parent.mkdir(parents=True, exist_ok=True)
+    context_path.write_text(result.markdown, encoding="utf-8")
+    return result
+
+
+def validate_agent_context(example_root: Path) -> AgentContextResult:
+    result = generate_agent_context(example_root)
+    context_path = example_root / ".ledge" / "context" / "agent-context.md"
+
+    if context_path.read_text(encoding="utf-8") != result.markdown:
+        raise ValueError("Generated agent context does not match the context artifact.")
+
+    return result
