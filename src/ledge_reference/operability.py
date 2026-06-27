@@ -486,6 +486,12 @@ def render_agent_decision_markdown(
             4. Only propose completion after evidence shows no remaining Clerk references.
             """
         ).strip(),
+        dedent(
+            """
+            ## Artifact Boundary
+            This is a local non-normative decision fixture with real LF line breaks.
+            """
+        ).strip(),
     )
     return BLANK_LINE.join(sections) + LF
 

@@ -30,3 +30,6 @@ Continue migration by removing or replacing remaining Clerk-specific code.
 2. Replace remaining Clerk provider usage.
 3. Re-run source scan.
 4. Only propose completion after evidence shows no remaining Clerk references.
+
+## Artifact Boundary
+This is a local non-normative decision fixture with real LF line breaks.
