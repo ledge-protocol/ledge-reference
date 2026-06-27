@@ -489,7 +489,7 @@ def render_agent_decision_markdown(
         dedent(
             """
             ## Artifact Boundary
-            This is a local non-normative decision fixture with real LF line breaks.
+            This is a local non-normative decision fixture.
             """
         ).strip(),
     )

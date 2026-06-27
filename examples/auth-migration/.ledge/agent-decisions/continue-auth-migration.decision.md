@@ -32,4 +32,4 @@ Continue migration by removing or replacing remaining Clerk-specific code.
 4. Only propose completion after evidence shows no remaining Clerk references.
 
 ## Artifact Boundary
-This is a local non-normative decision fixture with real LF line breaks.
+This is a local non-normative decision fixture.

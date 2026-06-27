@@ -2,9 +2,12 @@
 
 Continue the authentication migration.
 
-Constraints:
+## Constraints
+
 - Use the generated Ledge agent context.
 - Do not assume migration completion.
 - Produce evidence before claiming completion.
 
-This is a local non-normative task fixture with real LF line breaks.
+## Artifact Boundary
+
+This is a local non-normative task fixture.
