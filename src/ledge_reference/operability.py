@@ -258,7 +258,7 @@ def render_agent_context_markdown(
             f"Before implementing new authentication changes:\n\n{guidance_lines}"
         ),
     )
-    return "\n\n".join(sections) + "\n"
+    return "\n\n".join(sections) + "\n\n"
 
 
 def write_agent_context(example_root: Path) -> AgentContextResult:

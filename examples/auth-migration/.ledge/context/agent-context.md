@@ -26,3 +26,4 @@ Before implementing new authentication changes:
 2. Prefer BetterAuth-compatible changes.
 3. Do not mark the migration complete without evidence.
 4. Produce evidence for any claim about migration completion.
+

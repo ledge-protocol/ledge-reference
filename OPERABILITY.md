@@ -1,5 +1,6 @@
 # Operability
 
+
 This repository treats operability as the ability to close a minimal Ledge loop locally.
 
 The loop is:
