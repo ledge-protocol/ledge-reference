@@ -1,0 +1,6 @@
+{
+  "id": "state.current.accepted",
+  "acceptedClaim": "claim.auth.uses-betterauth",
+  "acceptedState": "authentication-migration-complete",
+  "nonNormativeExample": true
+}

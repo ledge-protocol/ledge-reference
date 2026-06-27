@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 
 
@@ -15,10 +16,10 @@ class DriftResult:
 def inspect_auth_migration(example_root: Path) -> DriftResult:
     """Inspect the auth migration example without defining a protocol format."""
     claim_path = example_root / ".ledge" / "claims" / "auth-uses-betterauth.json"
-    source_paths = sorted((example_root / "app").glob("*.ts"))
+    source_paths = sorted((example_root / "src").rglob("*.ts"))
 
-    claim_text = claim_path.read_text(encoding="utf-8")
-    claimed_complete = '"claimedComplete": true' in claim_text
+    claim = json.loads(claim_path.read_text(encoding="utf-8"))
+    claimed_complete = claim["migration"]["claimedComplete"]
     clerk_references = tuple(
         str(path.relative_to(example_root))
         for path in source_paths
