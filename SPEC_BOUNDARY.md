@@ -18,7 +18,10 @@ The following are examples, not protocol requirements:
 - transition layout,
 - authority approval layout,
 - generated context layout,
+- generated decision layout,
+- agent task layout,
 - prompt layout,
+- agent behavior,
 - Python module structure,
 - test structure.
 
@@ -40,7 +43,9 @@ This repository may validate whether the protocol concepts can be made operation
 - explicit human authority approval can be required before acceptance,
 - state can be recorded after approval,
 - accepted knowledge can be transformed into agent-usable context without
-  silently mutating state.
+  silently mutating state,
+- accepted context can be consumed by a deterministic simulated agent workflow
+  to produce an evidence-backed decision.
 
 ## What This Repository Must Not Claim
 
@@ -53,7 +58,11 @@ This repository must not claim:
 - to define the required transition format,
 - to define the required authority model,
 - to define a required context format,
+- to define a required agent decision format,
+- to define required agent behavior,
 - to define a required prompt format,
+- to be a real LLM evaluation,
+- to provide benchmark validity,
 - to be a production service,
 - to be the only valid implementation.
 
@@ -70,3 +79,11 @@ engineering framework, SDK surface, MCP interface, or product feature. Ledge
 does not define prompt format; Ledge requires the protocol boundary that
 accepted knowledge can be transformed into agent-usable context without
 silently changing accepted state.
+
+The generated agent decision in this repository is also a local Markdown
+artifact for readability only. It is produced by deterministic Python code and
+does not call or evaluate a real LLM. Real implementations may provide Ledge
+context to Codex, Claude, Cursor, Gemini, MCP, IDEs, local agents, or other
+tools, but Ledge does not define how those agents decide or act. This
+repository only demonstrates that accepted knowledge can be consumed to
+constrain or guide work in a local operability proof.
