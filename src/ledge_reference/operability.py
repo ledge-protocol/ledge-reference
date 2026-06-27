@@ -233,36 +233,32 @@ def render_agent_context_markdown(
 ) -> str:
     evidence_lines = "\n".join(f"- {path}" for path in evidence_paths)
     assumption_lines = "\n".join(corrected_assumptions)
-
-    return (
-        "# Agent Context\n"
-        "\n"
-        "## Human Intent\n"
-        f"{human_intent}\n"
-        "\n"
-        "## Accepted Knowledge\n"
-        "Authentication migration is not complete.\n"
-        "\n"
-        "## Evidence\n"
-        "Remaining Clerk references were found in:\n"
-        "\n"
-        f"{evidence_lines}\n"
-        "\n"
-        "## Corrected Assumptions\n"
-        f"{assumption_lines}\n"
-        "\n"
-        "## Current Drift Risk\n"
-        "The codebase may still contain Clerk-specific imports, middleware, "
-        "or auth provider usage.\n"
-        "\n"
-        "## Agent Guidance\n"
-        "Before implementing new authentication changes:\n"
-        "\n"
-        "1. Search for remaining Clerk references.\n"
-        "2. Prefer BetterAuth-compatible changes.\n"
-        "3. Do not mark the migration complete without evidence.\n"
-        "4. Produce evidence for any claim about migration completion.\n"
+    guidance_lines = "\n".join(
+        (
+            "1. Search for remaining Clerk references.",
+            "2. Prefer BetterAuth-compatible changes.",
+            "3. Do not mark the migration complete without evidence.",
+            "4. Produce evidence for any claim about migration completion.",
+        )
     )
+
+    sections = (
+        "# Agent Context",
+        f"## Human Intent\n{human_intent}",
+        "## Accepted Knowledge\nAuthentication migration is not complete.",
+        f"## Evidence\nRemaining Clerk references were found in:\n\n{evidence_lines}",
+        f"## Corrected Assumptions\n{assumption_lines}",
+        (
+            "## Current Drift Risk\n"
+            "The codebase may still contain Clerk-specific imports, middleware, "
+            "or auth provider usage."
+        ),
+        (
+            "## Agent Guidance\n"
+            f"Before implementing new authentication changes:\n\n{guidance_lines}"
+        ),
+    )
+    return "\n\n".join(sections) + "\n"
 
 
 def write_agent_context(example_root: Path) -> AgentContextResult:
