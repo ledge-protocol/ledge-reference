@@ -7,6 +7,10 @@ from textwrap import dedent
 from typing import Any
 
 
+LF = chr(10)
+BLANK_LINE = LF + LF
+
+
 @dataclass(frozen=True)
 class DriftResult:
     claim_id: str
@@ -30,6 +34,25 @@ class AgentContextResult:
     authentication_migration_complete: bool
     evidence_paths: tuple[str, ...]
     corrected_assumptions: tuple[str, ...]
+    markdown: str
+
+
+@dataclass(frozen=True)
+class AgentTask:
+    path: str
+    text: str
+    summary: str
+
+
+@dataclass(frozen=True)
+class AgentDecisionResult:
+    task: str
+    context_path: str
+    accepted_knowledge: str
+    stale_assumptions_avoided: tuple[str, ...]
+    evidence_paths: tuple[str, ...]
+    reality_check: str
+    decision: str
     markdown: str
 
 
@@ -232,9 +255,9 @@ def render_agent_context_markdown(
     evidence_paths: tuple[str, ...],
     corrected_assumptions: tuple[str, ...],
 ) -> str:
-    evidence_lines = "\n".join(f"- {path}" for path in evidence_paths)
-    assumption_lines = "\n".join(corrected_assumptions)
-    guidance_lines = "\n".join(
+    evidence_lines = LF.join(f"- {path}" for path in evidence_paths)
+    assumption_lines = LF.join(corrected_assumptions)
+    guidance_lines = LF.join(
         (
             "1. Search for remaining Clerk references.",
             "2. Prefer BetterAuth-compatible changes.",
@@ -286,7 +309,7 @@ def render_agent_context_markdown(
             """
         ).strip().format(guidance_lines=guidance_lines),
     )
-    return "\n\n".join(sections) + "\n"
+    return BLANK_LINE.join(sections) + LF
 
 
 def write_agent_context(example_root: Path) -> AgentContextResult:
@@ -303,5 +326,199 @@ def validate_agent_context(example_root: Path) -> AgentContextResult:
 
     if context_path.read_text(encoding="utf-8") != result.markdown:
         raise ValueError("Generated agent context does not match the context artifact.")
+
+    return result
+
+
+def load_agent_context_artifact(example_root: Path) -> str:
+    context_path = example_root / ".ledge" / "context" / "agent-context.md"
+    if not context_path.is_file():
+        raise ValueError("Generated agent context artifact is missing.")
+
+    context = context_path.read_text(encoding="utf-8")
+    if "Authentication migration is not complete." not in context:
+        raise ValueError("Agent context must state accepted incomplete migration knowledge.")
+
+    return context
+
+
+def load_agent_task(example_root: Path, task_name: str) -> AgentTask:
+    task_path = example_root / ".ledge" / "tasks" / task_name
+    if not task_path.is_file():
+        raise ValueError("Agent task is missing.")
+
+    task_text = task_path.read_text(encoding="utf-8")
+    summary = "Continue the authentication migration."
+    if summary not in task_text:
+        raise ValueError("Agent task must ask to continue the authentication migration.")
+
+    return AgentTask(
+        path=str(task_path.relative_to(example_root)),
+        text=task_text,
+        summary=summary,
+    )
+
+
+def generate_agent_decision_from_context(example_root: Path) -> AgentDecisionResult:
+    load_agent_context_artifact(example_root)
+    task = load_agent_task(example_root, "continue-auth-migration.md")
+    evidence = load_auth_migration_evidence(example_root)
+
+    evidence_paths = tuple(
+        observation["path"]
+        for observation in evidence["observations"]
+        if isinstance(observation, dict) and isinstance(observation.get("path"), str)
+    )
+    if not evidence_paths:
+        raise ValueError("Agent decision requires source evidence paths.")
+
+    source_paths = tuple(
+        str((example_root / path).relative_to(example_root))
+        for path in evidence_paths
+        if (example_root / path).is_file()
+    )
+    if source_paths != evidence_paths:
+        raise ValueError("Agent decision evidence must reference existing source files.")
+
+    stale_assumptions = (
+        "Did not assume migration was complete.",
+        "Did not assume all Clerk references were removed.",
+    )
+    evidence_consulted = (
+        "examples/auth-migration/.ledge/evidence/source-scan.json",
+        *evidence_paths,
+    )
+    accepted_knowledge = "Authentication migration is not complete."
+    reality_check = "Remaining Clerk references are present."
+    decision = LF.join(
+        (
+            "Do not mark migration complete.",
+            "Continue migration by removing or replacing remaining Clerk-specific code.",
+        )
+    )
+
+    markdown = render_agent_decision_markdown(
+        task=task.summary,
+        context_path="examples/auth-migration/.ledge/context/agent-context.md",
+        accepted_knowledge=accepted_knowledge,
+        stale_assumptions=stale_assumptions,
+        evidence_consulted=evidence_consulted,
+        reality_check=reality_check,
+        decision=decision,
+    )
+
+    return AgentDecisionResult(
+        task=task.summary,
+        context_path="examples/auth-migration/.ledge/context/agent-context.md",
+        accepted_knowledge=accepted_knowledge,
+        stale_assumptions_avoided=stale_assumptions,
+        evidence_paths=evidence_consulted,
+        reality_check=reality_check,
+        decision=decision,
+        markdown=markdown,
+    )
+
+
+def render_agent_decision_markdown(
+    task: str,
+    context_path: str,
+    accepted_knowledge: str,
+    stale_assumptions: tuple[str, ...],
+    evidence_consulted: tuple[str, ...],
+    reality_check: str,
+    decision: str,
+) -> str:
+    stale_assumption_lines = LF.join(
+        f"- {assumption}" for assumption in stale_assumptions
+    )
+    evidence_lines = LF.join(f"- {path}" for path in evidence_consulted)
+
+    sections = (
+        "# Agent Decision",
+        dedent(
+            """
+            ## Task
+            {task}
+            """
+        ).strip().format(task=task),
+        dedent(
+            """
+            ## Context Consumed
+            {context_path}
+            """
+        ).strip().format(context_path=context_path),
+        dedent(
+            """
+            ## Accepted Knowledge Used
+            {accepted_knowledge}
+            """
+        ).strip().format(accepted_knowledge=accepted_knowledge),
+        dedent(
+            """
+            ## Stale Assumptions Avoided
+            {stale_assumption_lines}
+            """
+        ).strip().format(stale_assumption_lines=stale_assumption_lines),
+        dedent(
+            """
+            ## Evidence Consulted
+            {evidence_lines}
+            """
+        ).strip().format(evidence_lines=evidence_lines),
+        dedent(
+            """
+            ## Reality Check
+            {reality_check}
+            """
+        ).strip().format(reality_check=reality_check),
+        dedent(
+            """
+            ## Decision
+            {decision}
+            """
+        ).strip().format(decision=decision),
+        dedent(
+            """
+            ## Proposed Next Actions
+            1. Replace remaining Clerk middleware usage.
+            2. Replace remaining Clerk provider usage.
+            3. Re-run source scan.
+            4. Only propose completion after evidence shows no remaining Clerk references.
+            """
+        ).strip(),
+        dedent(
+            """
+            ## Artifact Boundary
+            This is a local non-normative decision fixture.
+            """
+        ).strip(),
+    )
+    return BLANK_LINE.join(sections) + LF
+
+
+def write_agent_decision(example_root: Path) -> AgentDecisionResult:
+    result = generate_agent_decision_from_context(example_root)
+    decision_path = (
+        example_root
+        / ".ledge"
+        / "agent-decisions"
+        / "continue-auth-migration.decision.md"
+    )
+    decision_path.parent.mkdir(parents=True, exist_ok=True)
+    decision_path.write_text(result.markdown, encoding="utf-8")
+    return result
+
+
+def validate_agent_decision(example_root: Path) -> AgentDecisionResult:
+    result = generate_agent_decision_from_context(example_root)
+    decision_path = (
+        example_root
+        / ".ledge"
+        / "agent-decisions"
+        / "continue-auth-migration.decision.md"
+    )
+
+    if decision_path.read_text(encoding="utf-8") != result.markdown:
+        raise ValueError("Generated agent decision does not match the decision artifact.")
 
     return result

@@ -12,9 +12,11 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 from ledge_reference import (  # noqa: E402
     apply_authority_approval,
     load_authority_approval,
+    load_agent_task,
     load_latest_accepted_state,
     load_proposed_transition,
     validate_new_accepted_state,
+    write_agent_decision,
     write_agent_context,
 )
 
@@ -98,6 +100,21 @@ def main() -> None:
             for assumption in agent_context.corrected_assumptions
         ):
             print("Agent guidance warns against assuming migration completion.")
+
+        print()
+        task = load_agent_task(ROOT, "continue-auth-migration.md")
+        print("Agent context loaded.")
+        print("Agent task loaded.")
+        print(f"Agent task: {task.summary}")
+
+        agent_decision = write_agent_decision(ROOT)
+        print("Agent recognized migration incomplete.")
+        print("Agent avoided stale assumption.")
+        print("Agent consulted evidence:")
+        for evidence_path in agent_decision.evidence_paths:
+            print(f"- {evidence_path}")
+        print("Agent decision generated.")
+        print("Agent refused to mark migration complete without evidence.")
     else:
         print("No drift detected.")
 

@@ -1,19 +1,25 @@
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+LF = chr(10)
 
 from ledge_reference import (
     apply_authority_approval,
+    generate_agent_decision_from_context,
     generate_agent_context,
     inspect_auth_migration,
+    load_agent_task,
     load_authority_approval,
     load_proposed_transition,
     validate_agent_context,
+    validate_agent_decision,
     validate_accepted_transition,
     validate_new_accepted_state,
     validate_proposed_transition,
@@ -43,7 +49,7 @@ class OperabilityTest(unittest.TestCase):
 
         self.assertEqual(
             completed.stdout,
-            "\n".join(
+            LF.join(
                 [
                     "Drift detected.",
                     "",
@@ -72,6 +78,18 @@ class OperabilityTest(unittest.TestCase):
                     "Agent context generated.",
                     "Agent guidance includes corrected assumptions.",
                     "Agent guidance warns against assuming migration completion.",
+                    "",
+                    "Agent context loaded.",
+                    "Agent task loaded.",
+                    "Agent task: Continue the authentication migration.",
+                    "Agent recognized migration incomplete.",
+                    "Agent avoided stale assumption.",
+                    "Agent consulted evidence:",
+                    "- examples/auth-migration/.ledge/evidence/source-scan.json",
+                    "- src/auth/provider.ts",
+                    "- src/middleware.ts",
+                    "Agent decision generated.",
+                    "Agent refused to mark migration complete without evidence.",
                     "",
                 ]
             ),
@@ -198,6 +216,124 @@ class OperabilityTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "existing patch"):
             validate_proposed_transition(example_root, invalid_transition)
+
+    def test_agent_task_can_be_loaded(self) -> None:
+        task = load_agent_task(
+            ROOT / "examples" / "auth-migration",
+            "continue-auth-migration.md",
+        )
+
+        self.assertEqual(task.summary, "Continue the authentication migration.")
+        self.assertEqual(task.path, ".ledge/tasks/continue-auth-migration.md")
+
+    def test_agent_decision_can_be_generated_from_context(self) -> None:
+        result = generate_agent_decision_from_context(
+            ROOT / "examples" / "auth-migration"
+        )
+
+        self.assertIn("# Agent Decision", result.markdown)
+        self.assertEqual(result.task, "Continue the authentication migration.")
+
+    def test_agent_decision_references_generated_context(self) -> None:
+        result = generate_agent_decision_from_context(
+            ROOT / "examples" / "auth-migration"
+        )
+
+        self.assertEqual(
+            result.context_path,
+            "examples/auth-migration/.ledge/context/agent-context.md",
+        )
+        self.assertIn(result.context_path, result.markdown)
+
+    def test_agent_decision_includes_accepted_knowledge(self) -> None:
+        result = generate_agent_decision_from_context(
+            ROOT / "examples" / "auth-migration"
+        )
+
+        self.assertEqual(
+            result.accepted_knowledge,
+            "Authentication migration is not complete.",
+        )
+        self.assertIn(result.accepted_knowledge, result.markdown)
+
+    def test_agent_decision_avoids_stale_assumptions(self) -> None:
+        result = generate_agent_decision_from_context(
+            ROOT / "examples" / "auth-migration"
+        )
+
+        self.assertIn(
+            "Did not assume migration was complete.",
+            result.stale_assumptions_avoided,
+        )
+        self.assertIn(
+            "Did not assume all Clerk references were removed.",
+            result.stale_assumptions_avoided,
+        )
+        self.assertIn("## Stale Assumptions Avoided", result.markdown)
+
+    def test_agent_decision_references_evidence(self) -> None:
+        result = generate_agent_decision_from_context(
+            ROOT / "examples" / "auth-migration"
+        )
+
+        self.assertEqual(
+            result.evidence_paths,
+            (
+                "examples/auth-migration/.ledge/evidence/source-scan.json",
+                "src/auth/provider.ts",
+                "src/middleware.ts",
+            ),
+        )
+        self.assertIn("src/auth/provider.ts", result.markdown)
+        self.assertIn("src/middleware.ts", result.markdown)
+
+    def test_agent_decision_says_migration_is_incomplete(self) -> None:
+        result = generate_agent_decision_from_context(
+            ROOT / "examples" / "auth-migration"
+        )
+
+        self.assertIn("Authentication migration is not complete.", result.markdown)
+        self.assertIn("Remaining Clerk references are present.", result.markdown)
+
+    def test_agent_decision_does_not_mark_migration_complete(self) -> None:
+        result = generate_agent_decision_from_context(
+            ROOT / "examples" / "auth-migration"
+        )
+
+        self.assertIn("Do not mark migration complete.", result.markdown)
+        self.assertNotIn("Authentication migration is complete.", result.markdown)
+
+    def test_agent_decision_does_not_claim_clerk_references_are_removed(self) -> None:
+        result = generate_agent_decision_from_context(
+            ROOT / "examples" / "auth-migration"
+        )
+
+        self.assertNotIn("Clerk references are removed.", result.markdown)
+        self.assertNotIn("Clerk references have been removed.", result.markdown)
+        self.assertNotIn("no remaining Clerk references", result.reality_check)
+
+    def test_agent_decision_artifact_matches_generated_decision(self) -> None:
+        result = validate_agent_decision(ROOT / "examples" / "auth-migration")
+
+        self.assertIn("## Decision", result.markdown)
+
+    def test_missing_context_fails_agent_decision_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            example_copy = Path(temp_dir) / "auth-migration"
+            shutil.copytree(ROOT / "examples" / "auth-migration", example_copy)
+            (example_copy / ".ledge" / "context" / "agent-context.md").unlink()
+
+            with self.assertRaisesRegex(ValueError, "context artifact is missing"):
+                generate_agent_decision_from_context(example_copy)
+
+    def test_missing_evidence_fails_agent_decision_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            example_copy = Path(temp_dir) / "auth-migration"
+            shutil.copytree(ROOT / "examples" / "auth-migration", example_copy)
+            (example_copy / ".ledge" / "evidence" / "source-scan.json").unlink()
+
+            with self.assertRaisesRegex(FileNotFoundError, "source-scan.json"):
+                generate_agent_decision_from_context(example_copy)
 
 
 if __name__ == "__main__":

@@ -11,6 +11,8 @@ Its purpose is to show that Ledge can operate end-to-end in a local, file-based 
 5. A patch or next action can be associated with that drift.
 6. A proposed transition can become accepted only after explicit human authority approval.
 7. Accepted state can be transformed into agent-readable context.
+8. Agent-readable context can be consumed by a deterministic simulated agent
+   workflow to produce an evidence-backed decision.
 
 This repository is intentionally small. It validates operability, not completeness.
 
@@ -21,6 +23,8 @@ This repository is intentionally small. It validates operability, not completene
   transitions, authority, state, and context.
 - A small executable check that demonstrates drift detection against an example project.
 - A generated context artifact showing accepted knowledge as guidance for an agent.
+- A deterministic agent consumption simulation that reads that context before
+  producing an evidence-backed decision.
 - A place to test whether the concepts in LPS-0001 can be made operational.
 
 ## What This Repository Is Not
@@ -30,6 +34,8 @@ This repository is intentionally small. It validates operability, not completene
 - It is not a normative JSON shape.
 - It is not a normative Markdown shape.
 - It is not a prompt format.
+- It is not an agent behavior specification.
+- It is not a real LLM evaluation or benchmark.
 - It is not a normative authority system.
 - It is not a cloud service.
 - It is not a product.
@@ -62,7 +68,9 @@ For this reference implementation, that means:
 - transitions can remain proposed until explicit human approval is recorded,
 - accepted state can be updated after approval,
 - accepted knowledge can be rendered into agent-usable context without silently
-  mutating state.
+  mutating state,
+- generated context can guide a deterministic simulated agent decision without
+  claiming real-world agent behavior.
 
 The implementation is deliberately narrow. It only demonstrates that the loop
 can close. The local directories and JSON documents are reference fixtures, not
@@ -82,6 +90,9 @@ The example in `examples/auth-migration/` models this situation:
 - New accepted state: the migration is no longer marked complete.
 - Agent context: the accepted incomplete state, supporting evidence, corrected
   assumptions, and guidance are rendered for an agent continuing the migration.
+- Agent decision: a deterministic simulated agent reads the generated context
+  and task, consults source-scan evidence, avoids stale completion assumptions,
+  and refuses to mark the migration complete.
 
 Run the tests with:
 
@@ -123,3 +134,11 @@ Markdown, database records, prompts, model-specific context, or another
 representation. Ledge does not define prompt format; it only requires that
 accepted knowledge can be transformed into agent-usable context without
 silently mutating accepted state.
+
+The agent decision step is also intentionally deterministic and non-normative.
+It does not call OpenAI, Anthropic, Claude, Codex, Gemini, Cursor, or any other
+external service. It does not evaluate a real LLM. The checked-in Markdown
+decision format is only a readable fixture for this repository. Real
+implementations may provide accepted context to Codex, Claude, Cursor, Gemini,
+MCP, IDEs, local tools, or other agents, but Ledge does not define how those
+agents behave. This proof is about local operability, not benchmark validity.
