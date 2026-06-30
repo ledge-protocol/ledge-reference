@@ -7,7 +7,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parents[1]
-sys.path.insert(0, str(REPO_ROOT / "src"))
+SOURCE_ROOT = REPO_ROOT / "src"
+sys.path.insert(0, str(SOURCE_ROOT))
 
 from ledge_reference import (  # noqa: E402
     apply_authority_approval,
@@ -15,6 +16,7 @@ from ledge_reference import (  # noqa: E402
     load_agent_task,
     load_latest_accepted_state,
     load_proposed_transition,
+    run_auth_migration_reproducibility_check,
     validate_new_accepted_state,
     write_agent_decision,
     write_agent_context,
@@ -115,6 +117,18 @@ def main() -> None:
             print(f"- {evidence_path}")
         print("Agent decision generated.")
         print("Agent refused to mark migration complete without evidence.")
+        print()
+        print("Reproducibility check started.")
+        reproducibility_hashes = run_auth_migration_reproducibility_check(ROOT)
+        agent_context_hash = reproducibility_hashes["agentContext"]
+        agent_decision_hash = reproducibility_hashes["agentDecision"]
+        accepted_state_hash = reproducibility_hashes["acceptedState"]
+        drift_result_hash = reproducibility_hashes["driftResult"]
+        print(f"Agent context hash: {agent_context_hash}")
+        print(f"Agent decision hash: {agent_decision_hash}")
+        print(f"Accepted state hash: {accepted_state_hash}")
+        print(f"Drift result hash: {drift_result_hash}")
+        print("Reproducibility check passed.")
     else:
         print("No drift detected.")
 

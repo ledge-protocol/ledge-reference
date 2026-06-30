@@ -14,6 +14,7 @@ The loop is:
 8. Record a new accepted state.
 9. Generate agent-readable context from accepted state.
 10. Consume that context in a deterministic simulated agent workflow.
+11. Check that identical inputs reproduce the same knowledge outputs.
 
 ## Local Workflow
 
@@ -32,6 +33,7 @@ The `.ledge/` directory contains:
 - `context/`: supporting background and generated agent-readable context.
 - `tasks/`: a local agent task fixture,
 - `agent-decisions/`: a local deterministic agent decision fixture.
+- `reproducibility/`: expected hashes for the local reproducibility check.
 
 These names are descriptive for this reference implementation. They are not
 normative. The JSON shapes are also non-normative.
@@ -65,6 +67,12 @@ generated context, consults
 That decision says the migration is incomplete, references the evidence, avoids
 stale assumptions, and refuses to mark the migration complete without evidence.
 
+The example then runs a reproducibility check for the same local loop. It
+computes SHA-256 hashes for the drift result, accepted state after transition,
+generated agent context, and generated agent decision. It runs the loop twice
+and compares the hashes with
+`examples/auth-migration/.ledge/reproducibility/expected-outputs.json`.
+
 ## Running The Check
 
 Run:
@@ -79,16 +87,21 @@ The repository tests can be run with:
 python -m unittest discover
 ```
 
+Both commands are intended to be readable in a normal terminal and in GitHub
+review views. Generated artifacts use LF line endings.
+
 The example runner prints the drift, patch proposal, proposed transition, human
 approval, accepted transition, new accepted state, and generated agent context
 status. It also prints the deterministic agent consumption step: context
 loaded, task loaded, incomplete migration recognized, stale assumption avoided,
 evidence consulted, decision generated, and completion refused without
-evidence. The tests confirm that drift is detected, proposed transitions are
-not accepted without approval, missing approval fails, transitions must
-reference an existing patch, accepted state can generate agent-readable
-context, and generated context can drive an evidence-backed simulated agent
-decision.
+evidence. Finally, it prints the reproducibility hashes and pass status.
+
+The tests confirm that drift is detected, proposed transitions are not accepted
+without approval, missing approval fails, transitions must reference an
+existing patch, accepted state can generate agent-readable context, generated
+context can drive an evidence-backed simulated agent decision, and repeated
+runs produce identical reproducibility hashes.
 
 Authority validation here is intentionally minimal. It is enough to demonstrate
 explicit human approval in a local reference workflow, but it is not a
@@ -109,3 +122,9 @@ implementations may provide Ledge context to those tools, but Ledge does not
 define agent behavior. This proof demonstrates operability: accepted knowledge
 can constrain or guide agent work in a local workflow. It does not claim
 benchmark validity.
+
+The reproducibility workflow is intentionally non-normative as well. SHA-256
+and the checked-in hash manifest are convenient local verification tools, not
+protocol requirements. Real implementations may use different serialization,
+canonicalization, hashing, signatures, or verification methods. Ledge requires
+reproducibility as a protocol property, not this specific mechanism.
